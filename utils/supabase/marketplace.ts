@@ -15,6 +15,7 @@ export function useMarketplace(accountType: Profile['account_type']) {
   const [storeLimit, setLimit] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [demo, setDemo] = useState({enabled:false,phoneVerified:false,phone:'',emailDestination:''});
   const reload = useCallback(async () => {
     const client = createClient();
     const { data: { user }, error: authError } = await client.auth.getUser();
@@ -29,6 +30,10 @@ export function useMarketplace(accountType: Profile['account_type']) {
     for (const result of [profileResult, entitlement, stores, listings]) if (result.error) throw result.error;
     if (profileResult.data.account_type !== accountType) { window.location.replace('/' + profileResult.data.account_type); return; }
     setProfile(profileResult.data); setLimit(entitlement.data!.store_limit);
+    const config=await client.functions.invoke('store-action',{body:{step:'config'}});
+    const settings=config.error?null:config.data;
+    setDemo({enabled:Boolean(settings?.demoEnabled),phoneVerified:Boolean(settings?.demoPhoneVerified),phone:settings?.demoPhone || '',emailDestination:settings?.demoEmailDestination || ''});
+    if(settings?.demoEnabled && settings.demoStoreLimit) setLimit(settings.demoStoreLimit);
     setStores(stores.data!.map(row => ({ ...row, storeId: row.store_id, ownerId: row.owner_id })));
     setItems(listings.data!.map(row => ({ ...row, storeId: row.store_id, price: String(row.price) })));
     setError('');
@@ -42,7 +47,7 @@ export function useMarketplace(accountType: Profile['account_type']) {
     window.addEventListener('focus', refresh);
     return () => { subscription.unsubscribe(); window.removeEventListener('focus', refresh); };
   }, [reload]);
-  return { user, profile, allStores, stores: allStores.filter(store => store.ownerId === user?.id), items, storeLimit, loading, error, reload };
+  return { user, profile, allStores, stores: allStores.filter(store => store.ownerId === user?.id), items, storeLimit, loading, error, reload, demo };
 }
 export async function uploadImage(value: string, userId: string) {
   if (!value.startsWith('data:')) return value;
