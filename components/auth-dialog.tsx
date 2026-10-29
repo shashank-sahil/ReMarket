@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, GraduationCap, Heart, Phone, Recycle, Sparkles, UsersRound, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, GraduationCap, Heart, Phone, Recycle, UsersRound, X } from 'lucide-react';
 
 type EntryPoint = { x: number; y: number };
 type Step = 'choice' | 'kgp' | 'guest' | 'phone';
@@ -49,12 +49,12 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
         <div className="auth-card-top"><span className="auth-wordmark"><span className="auth-mark"><Recycle size={18} strokeWidth={2.2}/></span><span>re<span className="auth-wordmark-light">market</span><span className="auth-wordmark-dot">.</span></span></span><button type="button" className="auth-close" aria-label="Close sign in" onClick={onClose}><X size={19}/></button></div>
         <AnimatePresence mode="wait" initial={false}>
           {step === 'choice' ? <motion.div key="choice" className="auth-content" initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }} transition={{ duration: reducedMotion ? 0 : .2 }}>
-            <div className="auth-illustration" aria-hidden="true"><span className="auth-orbit auth-orbit-one"/><span className="auth-orbit auth-orbit-two"/><span className="auth-bubble auth-bubble-one"><Sparkles size={20}/></span><span className="auth-bubble auth-bubble-two"><Heart size={17}/></span><span className="auth-center"><Recycle size={34} strokeWidth={1.7}/></span><span className="auth-mini-star">✳</span></div>
+            <div className="auth-illustration" aria-hidden="true"><span className="auth-orbit auth-orbit-one"/><span className="auth-orbit auth-orbit-two"/><span className="auth-bubble auth-bubble-two"><Heart size={17}/></span><span className="auth-center"><Recycle size={34} strokeWidth={1.7}/></span></div>
             <div className="auth-kicker"><span/> A GOOD PLACE TO BEGIN</div>
             <h2 id="auth-title">Hey, are you<br/><span>a KGPian?</span></h2>
             <p id="auth-description" className="auth-description">Let’s get you to the good stuff. Do you have an IIT Kharagpur email?</p>
             <div className="auth-choice-list"><button type="button" className="auth-choice" onClick={() => { setNotice(''); setStep('kgp'); }}><span className="auth-choice-icon auth-choice-icon-green"><GraduationCap size={21}/></span><span className="auth-choice-copy"><strong>Yes, I’m a KGPian</strong><small>I have an IIT Kharagpur email</small></span><ArrowUpRight className="auth-choice-arrow" size={18}/></button><button type="button" className="auth-choice" onClick={() => { setNotice(''); setStep('guest'); }}><span className="auth-choice-icon auth-choice-icon-blue"><UsersRound size={20}/></span><span className="auth-choice-copy"><strong>No, I’m not</strong><small>I’d still like to join in</small></span><ArrowUpRight className="auth-choice-arrow" size={18}/></button></div>
-            <p className="auth-footnote">Good things are better when they go around. <span>✳</span></p>
+            <p className="auth-footnote">Good things are better when they go around.</p>
           </motion.div> : <motion.div key={step} className="auth-content auth-method-content" initial={{ opacity: 0, x: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: reducedMotion ? 0 : -12 }} transition={{ duration: reducedMotion ? 0 : .2 }}>
             <button type="button" className="auth-back" onClick={back}><ArrowLeft size={16}/> Back</button>
             <div className={`auth-method-icon ${step === 'kgp' ? 'is-kgp' : ''}`}>{step === 'kgp' ? <GraduationCap size={28}/> : step === 'phone' ? <Phone size={26}/> : <UsersRound size={27}/>}</div>

@@ -256,3 +256,5 @@
   .hero-3d { transform: none !important; }
 }
 
+.product-card:hover .product-image-button img { transform: none; }
+footer:focus { outline: none; }

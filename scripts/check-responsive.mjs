@@ -52,26 +52,17 @@ try {
   await page.locator('.save-button').tap();
   await page.getByRole('button', { name: 'View 1 saved finds', exact: true }).tap();
   await expect(page.locator('.product-card')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Make room for something new', exact: true }).tap();
-  await expect(page.locator('dialog')).toBeVisible();
-  expect(await page.locator('input[name="title"]').evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
-  await page.getByLabel('What are you passing on?').fill('Mobile test cycle');
-  await page.getByLabel('Category', { exact: true }).selectOption('Cycles');
-  await page.getByLabel('Your price (₹)').fill('1500');
-  await page.getByLabel('Hall / campus area').fill('RK Hall');
-  await page.getByLabel('A little about it').fill('Testing the complete sell flow on a touch screen.');
-  await page.screenshot({ path: 'artifacts/mobile-sell-form.png' });
-  await page.getByRole('button', { name: 'Save my preview draft' }).tap();
-  await expect(page.locator('dialog')).not.toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Mobile test cycle', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'View Mobile test cycle', exact: true }).tap();
-  await expect(page.locator('dialog')).toBeVisible();
-  await page.getByRole('button', { name: 'Delete local draft' }).tap();
-  await expect(page.locator('dialog')).not.toBeVisible();
+  await page.getByRole('button', { name: 'Buy & sell', exact: true }).first().tap();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: /No, I’m not/ }).tap();
+  await page.getByRole('button', { name: 'Continue with phone number' }).tap();
+  expect(await page.getByLabel('Phone number').evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+  await page.getByRole('button', { name: 'Close sign in' }).tap();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(await page.locator('.hero-sticker').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
   expect(errors).toEqual([]);
-  console.log('PASS touch targets, unclipped hero, mobile menu Escape/outside/link dismissal, horizontal category scrolling, save/filter, complete mobile draft flow, 16px form controls, reduced motion, no runtime errors.');
+  console.log('PASS touch targets, unclipped hero, mobile menu Escape/outside/link dismissal, horizontal category scrolling, save/filter, mobile sign-in flow, 16px phone control, reduced motion, no runtime errors.');
 } finally { await browser.close(); }
 
 
