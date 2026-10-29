@@ -22,10 +22,11 @@ Open http://localhost:3000. Edit `app/page.tsx`, `components/marketplace.tsx` an
 
 Category filters, text search, saved finds, item detail dialogs, a mobile menu, accessible native dialogs and FAQs, reduced-motion support, and device-local listing drafts. Saved items and drafts persist in localStorage when available.
 
-The product cards are illustrative offers. Drafts are private to the current browser. Accounts, chat, payments, image uploads and shared listings are outside this landing-page build.
+The product cards are illustrative offers. Drafts are private to the current browser. The Buy & sell buttons open a sign-in/sign-up UI preview with KGPian and non-KGPian paths. Google sign-in and phone verification are placeholders; no authentication or messages are sent. Accounts, chat, payments, image uploads and shared listings are outside this landing-page build.
 
 ## Design
 
 Apple-inspired silver and white surfaces, restrained blue accents, sage details, expressive typography, a custom generated product still life, pointer-responsive CSS 3D perspective and Motion animations. Fonts and imagery are served locally. See ASSETS.md for image provenance and generation prompt.
 
 Responsive styles are in app/responsive.css. Run node scripts/check-responsive.mjs against the local dev server to check 10 viewport sizes, touch target sizes, the full mobile draft flow and navigation behaviour.
+

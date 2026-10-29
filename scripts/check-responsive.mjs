@@ -52,7 +52,7 @@ try {
   await page.locator('.save-button').tap();
   await page.getByRole('button', { name: 'View 1 saved finds', exact: true }).tap();
   await expect(page.locator('.product-card')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Sell a little', exact: true }).tap();
+  await page.getByRole('button', { name: 'Make room for something new', exact: true }).tap();
   await expect(page.locator('dialog')).toBeVisible();
   expect(await page.locator('input[name="title"]').evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
   await page.getByLabel('What are you passing on?').fill('Mobile test cycle');
@@ -73,4 +73,5 @@ try {
   expect(errors).toEqual([]);
   console.log('PASS touch targets, unclipped hero, mobile menu Escape/outside/link dismissal, horizontal category scrolling, save/filter, complete mobile draft flow, 16px form controls, reduced motion, no runtime errors.');
 } finally { await browser.close(); }
+
 
