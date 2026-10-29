@@ -114,7 +114,7 @@
 .kgp-sidebar{background:linear-gradient(165deg,#f7f9fc 0%,#f4f7f6 60%,#f9f3f8 100%);border-color:#e6e9ef}
 .kgp-topbar{background:linear-gradient(100deg,#f7faffed,#f7fbf8ed 50%,#fdf7fbed);border-color:#e7e9ef}
 .kgp-topbar:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,#176bd1 0%,#61a380 35%,#bf6aa4 70%,#25282f 100%);opacity:.48}
-.kgp-brand-mark{background:var(--palette-ink)}.kgp-brand i{color:var(--palette-magenta)}
+.kgp-brand-mark{background:var(--palette-ink)}.kgp-brand i{color:#0071e3}
 .kgp-side-nav .kgp-nav-item{color:#555e69;opacity:1}
 .kgp-side-nav .kgp-nav-item:nth-child(1) svg:first-child{color:var(--palette-blue)}
 .kgp-side-nav .kgp-nav-item:nth-child(2) svg:first-child{color:var(--palette-green)}
