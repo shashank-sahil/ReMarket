@@ -1,0 +1,3 @@
+﻿const fs=require('fs');
+const file='components/marketplace.tsx';let s=fs.readFileSync(file,'utf8').replace('initial={{ opacity: 0, y: reduced ? 0 : 28 }}','initial={{ opacity: 1, y: reduced ? 0 : 22 }}').replace('/hero-still-life.png','/hero-still-life.webp').replace('Black over-ear headphones on a clean yellow background','Black over-ear headphones on a light desktop').replace('A stack of colourful books','A poetry book beside a cup of coffee').replace('A silver laptop on a wooden desk','A silver laptop illuminated with purple light');fs.writeFileSync(file,s);
+require('sharp')('public/hero-still-life.png').webp({quality:90}).toFile('public/hero-still-life.webp').then(info=>console.log('Optimized hero:',info.size,'bytes'));
