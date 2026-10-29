@@ -38,7 +38,7 @@ async function signedIn(page: any, role = 'kgpians') {
 
 test('store save failure keeps the form and success uses the returned database row', async ({ page }) => {
   await signedIn(page);
-  await page.goto('http://localhost:3101/kgpians');
+  await page.goto('http://localhost:3000/kgpians');
   await page.getByRole('button',{name:'Create store',exact:true}).click();
   await page.getByPlaceholder('e.g. The Campus Closet').fill('Campus Finds');
   await page.locator('select').selectOption('Campus essentials');
@@ -64,7 +64,7 @@ test('store save failure keeps the form and success uses the returned database r
 
 test('community account loads the database profile without store creation controls', async ({page}) => {
   await signedIn(page,'nonkgpians');
-  await page.goto('http://localhost:3102/nonkgpians');
+  await page.goto('http://localhost:3000/nonkgpians');
   await expect(page.getByRole('heading',{name:'Search.',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'My Store',exact:true})).toHaveCount(0);
   await page.getByRole('navigation',{name:'KGPian sections'}).getByRole('button',{name:'Me',exact:true}).click();

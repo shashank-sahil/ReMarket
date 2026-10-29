@@ -3,10 +3,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 
 const output = resolve(process.cwd(), 'out');
-const previews = [
-  { route: 'kgpians', port: 3101 },
-  { route: 'nonkgpians', port: 3102 },
-];
+const previews = [3000, 3101, 3102];
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
@@ -27,8 +24,13 @@ if (!existsSync(join(output, 'kgpians.html')) || !existsSync(join(output, 'nonkg
   process.exit(1);
 }
 
-for (const { route, port } of previews) {
+for (const port of previews) {
   const server = createServer((request, response) => {
+    if (port !== 3000) {
+      const incoming = new URL(request.url ?? '/', 'http://localhost');
+      response.writeHead(302, { Location: `http://localhost:3000${incoming.pathname}${incoming.search}` }).end();
+      return;
+    }
     let pathname;
     try { pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname); }
     catch { response.writeHead(400).end('Bad request'); return; }
@@ -45,8 +47,8 @@ for (const { route, port } of previews) {
     createReadStream(file).pipe(response);
   });
   server.on('error', error => {
-    console.error(`Could not start ${route} preview on port ${port}: ${error.message}`);
+    console.error(`Could not start local server on port ${port}: ${error.message}`);
     process.exitCode = 1;
   });
-  server.listen(port, '127.0.0.1', () => console.log(`${route}: http://localhost:${port}`));
+  server.listen(port, '127.0.0.1', () => console.log(port === 3000 ? 'Re Market: http://localhost:3000' : `http://localhost:${port} redirects to port 3000`));
 }

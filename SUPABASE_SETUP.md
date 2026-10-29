@@ -10,7 +10,7 @@ In the Supabase project, open **SQL Editor → New query** and run the entire fi
 
 Run this migration once. It uses a transaction, so a failed run rolls back. If tables with these names already exist, stop and reconcile the schema before running it. It creates profiles, entitlements, stores, listings, the marketplace image bucket, and ownership policies. Existing Auth users are backfilled.
 
-Account type comes from the verified Auth email: `@iitkgp.ac.in` becomes `kgpians`; everyone else becomes `nonkgpians`. The button selected on the landing page does not grant permissions. Only KGPians can create stores. Non-KGPians can browse stores and listings and manage their profiles.
+After the first migration, run `supabase/migrations/202610290002_iitkgp_email_domains.sql` too. Account type comes from the verified Auth email: `@iitkgp.ac.in` and its subdomains (including `@kgpian.iitkgp.ac.in` and `@civil.iitkgp.ac.in`) become `kgpians`; everyone else becomes `nonkgpians`. The second migration also corrects existing profiles. Domain lookalikes such as `@fakeiitkgp.ac.in` are not accepted. The button selected on the landing page does not grant permissions. Only KGPians can create stores. Non-KGPians can browse stores and listings and manage their profiles.
 
 ## 2. Configure Google
 
@@ -21,11 +21,9 @@ Enable **Authentication → Sign In / Providers → Google** with your Google OA
 Add these allowed redirect URLs under Supabase **Authentication → URL Configuration**:
 
 - `http://localhost:3000/auth/callback`
-- `http://localhost:3101/auth/callback`
-- `http://localhost:3102/auth/callback`
 - `https://re-market-kgp.saud182184.chatgpt.site/auth/callback`
 
-Set the Site URL to the production origin. Local sign-in stays on the originating port. The current local preview root serves the landing page; dashboards are at `/kgpians` and `/nonkgpians`.
+Set the Site URL to the production origin. All local pages and sign-in use port 3000. Old ports 3101 and 3102 redirect to port 3000. The local root serves the landing page; dashboards are at `/kgpians` and `/nonkgpians`. Google Authorized JavaScript origins only need `http://localhost:3000` for local development.
 
 ## 3. Configure SMS
 

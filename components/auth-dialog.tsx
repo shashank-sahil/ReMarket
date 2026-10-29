@@ -50,7 +50,7 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
     setBusy(true); setNotice('Opening Google…');
     const { error } = await createClient().auth.signInWithOAuth({ provider: 'google', options: {
       redirectTo: `${window.location.origin}/auth/callback`,
-      queryParams: step === 'kgp' ? { hd: 'iitkgp.ac.in' } : {},
+      queryParams: { prompt: 'select_account' },
     } });
     if (error) { setNotice(error.message); setBusy(false); }
   };
@@ -91,7 +91,7 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
             <div className={`auth-method-icon ${step === 'kgp' ? 'is-kgp' : ''}`}>{step === 'kgp' ? <GraduationCap size={28}/> : step === 'phone' ? <Phone size={26}/> : <UsersRound size={27}/>}</div>
             <div className="auth-kicker"><span/> {step === 'kgp' ? 'HELLO, FELLOW KGPIAN' : step === 'phone' ? 'ONE LITTLE DETAIL' : 'THERE’S ROOM FOR YOU'}</div>
             <h2 id="auth-title">{step === 'kgp' ? <>Welcome<br/><span>back to campus.</span></> : step === 'phone' ? <>Your number,<br/><span>please.</span></> : <>Come on in.<br/><span>Good to see you.</span></>}</h2>
-            <p id="auth-description" className="auth-description">{step === 'kgp' ? <>Continue with Google using your <strong>@iitkgp.ac.in</strong> email.</> : step === 'phone' ? 'Enter your mobile number to receive a sign-in code.' : 'Sign in or create an account to buy, sell and give good things another go.'}</p>
+            <p id="auth-description" className="auth-description">{step === 'kgp' ? <>Continue with Google using your <strong>IIT Kharagpur email</strong> (including student and department accounts).</> : step === 'phone' ? 'Enter your mobile number to receive a sign-in code.' : 'Sign in or create an account to buy, sell and give good things another go.'}</p>
             {step === 'phone' ? <form className="auth-phone-form" onSubmit={continuePhone}><label htmlFor="auth-phone">Phone number</label><div className="auth-phone-field"><span>+91</span><input id="auth-phone" type="tel" inputMode="numeric" autoComplete="tel-national" pattern="[0-9]{10}" maxLength={10} value={phone} onChange={event => setPhone(event.target.value.replace(/\D/g, ''))} placeholder="Enter 10-digit number" required/></div><p className="auth-input-hint">Enter a 10-digit Indian mobile number.</p><button type="submit" disabled={busy} className="auth-primary">Continue <ArrowRight size={18}/></button></form> : <div className="auth-methods"><button type="button" className="auth-method" disabled={busy} onClick={continueGoogle}><GoogleMark/><span>Continue with Google</span><ArrowUpRight size={17}/></button>{step === 'guest' && <><div className="auth-divider"><span/>or<span/></div><button type="button" className="auth-method" onClick={() => { setNotice(''); setStep('phone'); }}><Phone size={20}/><span>Continue with phone number</span><ArrowUpRight size={17}/></button></>}</div>}
             {step === 'phone' && codeSent && <label>Verification code<input autoComplete="one-time-code" inputMode="numeric" value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g,''))}/></label>}
             <p className="auth-notice" role="status" aria-live="polite">{notice}</p>
