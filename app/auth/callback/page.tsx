@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import LoadingScreen from '@/components/loading-screen';
 
 export default function AuthCallback() {
   const [error, setError] = useState('');
@@ -24,5 +25,6 @@ export default function AuthCallback() {
     }
     finish().catch(error => setError(error.message));
   }, []);
-  return <main style={{maxWidth:500,margin:'20vh auto',padding:24}}><h1>{error ? 'Sign-in needs attention' : 'Welcome to Re Market'}</h1><p role="status">{error || 'Finishing your sign-in…'}</p>{error && <a href="/">Return to sign in</a>}</main>;
+  if (!error) return <LoadingScreen stage="sign-in"/>;
+  return <main style={{maxWidth:500,margin:'20vh auto',padding:24}}><h1>Sign-in needs attention</h1><p role="alert">{error}</p><a href="/">Return to sign in</a></main>;
 }
