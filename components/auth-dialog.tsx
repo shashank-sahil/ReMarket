@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, GraduationCap, Heart, Phone, Recycle, UsersRound, X } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
 
 type EntryPoint = { x: number; y: number };
 type Step = 'choice' | 'kgp' | 'guest' | 'phone';
@@ -16,10 +17,18 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
   const [step, setStep] = useState<Step>('choice');
   const [notice, setNotice] = useState('');
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [busy, setBusy] = useState(false);
   const reducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState(() => ({ width: typeof window === 'undefined' ? 0 : window.innerWidth, height: typeof window === 'undefined' ? 0 : window.innerHeight }));
 
   useEffect(() => {
+    createClient().auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await createClient().from('profiles').select('account_type').eq('id',user.id).single();
+      if (data) window.location.assign('/' + data.account_type);
+    });
     const dialog = ref.current;
     if (!dialog) return;
     const previousOverflow = document.body.style.overflow;
@@ -35,11 +44,33 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
   const bubbleRadius = Math.hypot(Math.max(origin.x, viewport.width - origin.x), Math.max(origin.y, viewport.height - origin.y));
   const circleAtOrigin = `circle(0px at ${origin.x}px ${origin.y}px)`;
   const circleCoveringScreen = `circle(${bubbleRadius + 20}px at ${origin.x}px ${origin.y}px)`;
-  const back = () => { setNotice(''); setStep(step === 'phone' ? 'guest' : 'choice'); };
-  const continueGoogle = () => setNotice('Google sign-in is coming soon. No account has been created yet.');
-  const continuePhone = (event: FormEvent<HTMLFormElement>) => {
+  const back = () => { setNotice(''); setCodeSent(false); setOtp(''); setStep(step === 'phone' ? 'guest' : 'choice'); };
+  const continueGoogle = async () => {
+    if (busy) return;
+    setBusy(true); setNotice('Opening Google…');
+    const { error } = await createClient().auth.signInWithOAuth({ provider: 'google', options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+      queryParams: step === 'kgp' ? { hd: 'iitkgp.ac.in' } : {},
+    } });
+    if (error) { setNotice(error.message); setBusy(false); }
+  };
+  const continuePhone = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setNotice('Phone sign-in is coming soon. No verification message has been sent.');
+    if (busy) return;
+    setBusy(true);
+    try {
+      const client = createClient();
+      if (!codeSent) {
+        const { error } = await client.auth.signInWithOtp({ phone: '+91' + phone });
+        if (error) throw error;
+        setCodeSent(true); setNotice('Enter the verification code sent to your phone.');
+      } else {
+        const { error } = await client.auth.verifyOtp({ phone: '+91' + phone, token: otp, type: 'sms' });
+        if (error) throw error;
+        window.location.assign('/auth/callback');
+      }
+    } catch (error) { setNotice(error instanceof Error ? error.message : 'Sign-in failed. Please try again.'); }
+    finally { setBusy(false); }
   };
 
   return <dialog ref={ref} className="auth-dialog" aria-labelledby="auth-title" aria-describedby="auth-description" onCancel={(event) => { event.preventDefault(); onClose(); }}>
@@ -60,9 +91,10 @@ export default function AuthDialog({ origin, onClose }: { origin: EntryPoint; on
             <div className={`auth-method-icon ${step === 'kgp' ? 'is-kgp' : ''}`}>{step === 'kgp' ? <GraduationCap size={28}/> : step === 'phone' ? <Phone size={26}/> : <UsersRound size={27}/>}</div>
             <div className="auth-kicker"><span/> {step === 'kgp' ? 'HELLO, FELLOW KGPIAN' : step === 'phone' ? 'ONE LITTLE DETAIL' : 'THERE’S ROOM FOR YOU'}</div>
             <h2 id="auth-title">{step === 'kgp' ? <>Welcome<br/><span>back to campus.</span></> : step === 'phone' ? <>Your number,<br/><span>please.</span></> : <>Come on in.<br/><span>Good to see you.</span></>}</h2>
-            <p id="auth-description" className="auth-description">{step === 'kgp' ? <>Continue with Google using your <strong>@iitkgp.ac.in</strong> email.</> : step === 'phone' ? 'Enter your mobile number to continue when phone sign-in is available.' : 'Sign in or create an account to buy, sell and give good things another go.'}</p>
-            {step === 'phone' ? <form className="auth-phone-form" onSubmit={continuePhone}><label htmlFor="auth-phone">Phone number</label><div className="auth-phone-field"><span>+91</span><input id="auth-phone" type="tel" inputMode="numeric" autoComplete="tel-national" pattern="[0-9]{10}" maxLength={10} value={phone} onChange={event => setPhone(event.target.value.replace(/\D/g, ''))} placeholder="Enter 10-digit number" required/></div><p className="auth-input-hint">Enter a 10-digit Indian mobile number.</p><button type="submit" className="auth-primary">Continue <ArrowRight size={18}/></button></form> : <div className="auth-methods"><button type="button" className="auth-method" onClick={continueGoogle}><GoogleMark/><span>Continue with Google</span><ArrowUpRight size={17}/></button>{step === 'guest' && <><div className="auth-divider"><span/>or<span/></div><button type="button" className="auth-method" onClick={() => { setNotice(''); setStep('phone'); }}><Phone size={20}/><span>Continue with phone number</span><ArrowUpRight size={17}/></button></>}</div>}
-            <p className="auth-notice" role="status" aria-live="polite">{notice || 'Sign-in options are being set up. This is a preview.'}</p>
+            <p id="auth-description" className="auth-description">{step === 'kgp' ? <>Continue with Google using your <strong>@iitkgp.ac.in</strong> email.</> : step === 'phone' ? 'Enter your mobile number to receive a sign-in code.' : 'Sign in or create an account to buy, sell and give good things another go.'}</p>
+            {step === 'phone' ? <form className="auth-phone-form" onSubmit={continuePhone}><label htmlFor="auth-phone">Phone number</label><div className="auth-phone-field"><span>+91</span><input id="auth-phone" type="tel" inputMode="numeric" autoComplete="tel-national" pattern="[0-9]{10}" maxLength={10} value={phone} onChange={event => setPhone(event.target.value.replace(/\D/g, ''))} placeholder="Enter 10-digit number" required/></div><p className="auth-input-hint">Enter a 10-digit Indian mobile number.</p><button type="submit" disabled={busy} className="auth-primary">Continue <ArrowRight size={18}/></button></form> : <div className="auth-methods"><button type="button" className="auth-method" disabled={busy} onClick={continueGoogle}><GoogleMark/><span>Continue with Google</span><ArrowUpRight size={17}/></button>{step === 'guest' && <><div className="auth-divider"><span/>or<span/></div><button type="button" className="auth-method" onClick={() => { setNotice(''); setStep('phone'); }}><Phone size={20}/><span>Continue with phone number</span><ArrowUpRight size={17}/></button></>}</div>}
+            {step === 'phone' && codeSent && <label>Verification code<input autoComplete="one-time-code" inputMode="numeric" value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g,''))}/></label>}
+            <p className="auth-notice" role="status" aria-live="polite">{notice}</p>
           </motion.div>}
         </AnimatePresence>
       </motion.section>

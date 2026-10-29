@@ -33,15 +33,9 @@ for (const { route, port } of previews) {
     try { pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname); }
     catch { response.writeHead(400).end('Bad request'); return; }
 
-    if (pathname === '/') {
-      response.writeHead(302, { Location: `/${route}` }).end();
-      return;
-    }
-
-    const relative = pathname === `/${route}` || pathname === `/${route}/`
-      ? `${route}.html`
-      : pathname.slice(1);
-    const file = resolve(output, relative);
+    const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//,'').replace(/\/$/,'');
+    let file = resolve(output, relative);
+    if (!extname(file) && existsSync(file + '.html')) file += '.html';
     if (!file.startsWith(output + sep) || !existsSync(file) || !statSync(file).isFile()) {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');
       return;

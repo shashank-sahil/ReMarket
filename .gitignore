@@ -5,3 +5,5 @@ out/
 .env*
 !.env.example
 artifacts/
+test-results/
+playwright-report/

@@ -105,6 +105,9 @@
 @media(prefers-reduced-motion:reduce){.kgp-app,.kgp-sidebar,.kgp-main-wrap{transition:none}}
 
 /* One shared palette: ink, blue, green and magenta across every section. */
+.kgp-app[hidden],.kgp-app [hidden]{display:none!important}
+#nonkgpians{color:#202322;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.kgp-connection{max-width:600px;margin:18vh auto;padding:24px}.kgp-connection h1{font-size:32px;letter-spacing:-1px}.kgp-connection p{color:#687482;line-height:1.6}.kgp-connection button,.kgp-connection a{display:inline-block;margin:12px 12px 0 0;padding:12px 18px;border-radius:100px;background:#176bd1;color:white;font-size:13px}
 .kgp-theme-store,.kgp-theme-search,.kgp-theme-explore,.kgp-theme-me{
   --tab-accent:#176bd1;--tab-dark:#22262d;--tab-soft:#eaf1fc;
   --tab-canvas:#f7f8fb;--tab-side:#f5f6f9;--tab-border:#e4e7ee;--tab-subtle:#737d8b;

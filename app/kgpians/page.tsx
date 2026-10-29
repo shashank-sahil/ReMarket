@@ -4,7 +4,7 @@ import './dashboard.css';
 
 export const metadata: Metadata = {
   title: 'KGP Space | Re Market',
-  description: 'Your store, account, and campus marketplace preview on Re Market.',
+  description: 'Your store, account, and campus marketplace on Re Market.',
 };
 
 export default function KgpiansPage() {
