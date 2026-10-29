@@ -27,3 +27,5 @@ The product cards are illustrative offers. Drafts are private to the current bro
 ## Design
 
 Apple-inspired silver and white surfaces, restrained blue accents, sage details, expressive typography, a custom generated product still life, pointer-responsive CSS 3D perspective and Motion animations. Fonts and imagery are served locally. See ASSETS.md for image provenance and generation prompt.
+
+Responsive styles are in app/responsive.css. Run node scripts/check-responsive.mjs against the local dev server to check 10 viewport sizes, touch target sizes, the full mobile draft flow and navigation behaviour.
