@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from './client';
 import type { Listing } from '@/components/store-workspace';
+import { runStoreAction } from './store-actions';
 
 export type MarketStore = { id: string; ownerId: string; name: string; storeId: string; category: string; tagline: string; description: string; hall: string; address: string; banner: string };
 export type Profile = { id: string; full_name: string; email: string; address: string; account_type: 'kgpians' | 'nonkgpians' };
@@ -16,6 +17,7 @@ export function useMarketplace(accountType: Profile['account_type']) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [demo, setDemo] = useState({enabled:false,phoneVerified:false,phone:'',emailDestination:''});
+  const [verificationError,setVerificationError]=useState('');
   const reload = useCallback(async () => {
     const client = createClient();
     const { data: { user }, error: authError } = await client.auth.getUser();
@@ -30,8 +32,9 @@ export function useMarketplace(accountType: Profile['account_type']) {
     for (const result of [profileResult, entitlement, stores, listings]) if (result.error) throw result.error;
     if (profileResult.data.account_type !== accountType) { window.location.replace('/' + profileResult.data.account_type); return; }
     setProfile(profileResult.data); setLimit(entitlement.data!.store_limit);
-    const config=await client.functions.invoke('store-action',{body:{step:'config'}});
-    const settings=config.error?null:config.data;
+    let settings=null;
+    try{settings=await runStoreAction({step:'config'});setVerificationError('');}
+    catch(error){setVerificationError(errorMessage(error));}
     setDemo({enabled:Boolean(settings?.demoEnabled),phoneVerified:Boolean(settings?.demoPhoneVerified),phone:settings?.demoPhone || '',emailDestination:settings?.demoEmailDestination || ''});
     if(settings?.demoEnabled && settings.demoStoreLimit) setLimit(settings.demoStoreLimit);
     setStores(stores.data!.map(row => ({ ...row, storeId: row.store_id, ownerId: row.owner_id })));
@@ -47,7 +50,7 @@ export function useMarketplace(accountType: Profile['account_type']) {
     window.addEventListener('focus', refresh);
     return () => { subscription.unsubscribe(); window.removeEventListener('focus', refresh); };
   }, [reload]);
-  return { user, profile, allStores, stores: allStores.filter(store => store.ownerId === user?.id), items, storeLimit, loading, error, reload, demo };
+  return { user, profile, allStores, stores: allStores.filter(store => store.ownerId === user?.id), items, storeLimit, loading, error, reload, demo, verificationError };
 }
 export async function uploadImage(value: string, userId: string) {
   if (!value.startsWith('data:')) return value;

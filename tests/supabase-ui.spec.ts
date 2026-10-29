@@ -20,11 +20,17 @@ async function signedIn(page: any, role = 'kgpians', demoEnabled=false) {
   let failItemSave = true;
   let pending: any;
   let demoLimit=1;
+  let demoPhoneVerified=false,phoneFailure=true;
   await page.route(project+'/functions/v1/store-action', async (route: any) => {
     const headers = {'Access-Control-Allow-Origin':'http://localhost:3000','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS'};
     if (route.request().method()==='OPTIONS') return route.fulfill({status:204,headers});
     const body=route.request().postDataJSON();
-    if(body.step==='config') return route.fulfill({headers,json:{demoEnabled,demoStoreLimit:demoEnabled?demoLimit:null,demoPhoneVerified:false}});
+    if(body.step==='config') return route.fulfill({headers,json:{demoEnabled,demoStoreLimit:demoEnabled?demoLimit:null,demoPhoneVerified,demoPhone:demoPhoneVerified?'+919876543210':null}});
+    if(body.step==='verify-test-phone'){
+      if(body.pin!=='0000')return route.fulfill({status:400,headers,json:{error:'Use PIN 0000'}});
+      if(phoneFailure){phoneFailure=false;return route.fulfill({status:500,headers,json:{error:'Temporary verification service failure'}});}
+      demoPhoneVerified=true;return route.fulfill({headers,json:{ok:true}});
+    }
     if(body.step==='demo-plan'){demoLimit=body.storeLimit;return route.fulfill({headers,json:{ok:true}});}
     if (body.step==='start') { pending=body; return route.fulfill({headers,json:{challengeId:'44444444-4444-4444-8444-444444444444'}}); }
     if (body.emailCode!=='123456' || body.phoneCode!=='654321') return route.fulfill({status:400,headers,json:{error:'Invalid codes'}});
@@ -112,4 +118,20 @@ test('the free-store limit opens demo plans and Pro adds a badge',async({page})=
   await expect(page.locator('.kgp-sidebar-top .kgp-pro-badge')).toBeVisible();
   await page.getByRole('button',{name:'Create another store'}).click();
   await expect(page.getByRole('heading',{name:'Create your store.'})).toBeVisible();
+});
+
+test('phone PIN has an explicit mobile confirmation button and actionable server errors',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await signedIn(page,'kgpians',true);
+  await page.goto('http://localhost:3000/kgpians');
+  await page.getByRole('navigation',{name:'KGPian mobile navigation'}).getByRole('button',{name:'Me',exact:true}).click();
+  await page.getByLabel('Phone number',{exact:true}).fill('9876543210');
+  await page.getByRole('button',{name:'Continue with test PIN'}).click();
+  await page.getByLabel('Test PIN',{exact:true}).fill('0000');
+  await expect(page.getByRole('button',{name:'Verify phone number',exact:true})).toBeVisible();
+  await page.getByLabel('Test PIN',{exact:true}).press('Enter');
+  await expect(page.getByRole('alert').filter({hasText:'Temporary verification service failure'})).toContainText('(500)');
+  await expect(page.getByLabel('Test PIN',{exact:true})).toHaveValue('0000');
+  await page.getByRole('button',{name:'Verify phone number',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('Test phone confirmed.');
 });

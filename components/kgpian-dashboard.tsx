@@ -6,6 +6,7 @@ import StoreWorkspace, { ListingCard, type Listing } from './store-workspace';
 import LoadingScreen from './loading-screen';
 import StoreActionDialog from './store-action-dialog';
 import PlanDialog from './plan-dialog';
+import PhoneVerification from './phone-verification';
 import { runStoreAction } from '@/utils/supabase/store-actions';
 import { createClient } from '@/utils/supabase/client';
 import { useMarketplace, uploadImage, errorMessage } from '@/utils/supabase/marketplace';
@@ -57,13 +58,13 @@ export default function KgpianDashboard({ accountType = 'kgpians' }: { accountTy
   const [handleTouched, setHandleTouched] = useState(false);
   const [storeMessage, setStoreMessage] = useState('');
   const [bannerError, setBannerError] = useState('');
-  const [phone, setPhone] = useState('');
-  const [phoneMessage, setPhoneMessage] = useState('');
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [address, setAddress] = useState('');
   const [busy, setBusy] = useState(false);
-  const [phoneCode, setPhoneCode] = useState('');
-  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
+
+
   const [workspace, setWorkspace] = useState<{ storeId: string; view: 'edit' | 'view' } | null>(null);
   const [pendingAction, setPendingAction] = useState<{ type: 'create'; form: StoreForm } | { type: 'delete'; store: StoreInfo } | null>(null);
   const [showPlans,setShowPlans]=useState(false);
@@ -109,24 +110,6 @@ export default function KgpianDashboard({ accountType = 'kgpians' }: { accountTy
     if (!user) return;
     const { error } = await createClient().from('profiles').update({ address }).eq('id',user.id);
     setSavedNotice(error ? error.message : 'Address saved.');
-  }
-  async function verifyPhone() {
-    if (phone.length !== 10) { setPhoneMessage('Enter a 10-digit phone number.'); return; }
-    if(market.demo.enabled){
-      if(!phoneCodeSent){setPhoneCodeSent(true);setPhoneMessage('Test mode: use PIN 0000. No SMS is sent.');return;}
-      try{await runStoreAction({step:'verify-test-phone',phone:'+91'+phone,pin:phoneCode});setPhoneCodeSent(false);setPhoneMessage('Test phone confirmed. This is not real SMS verification.');await reload();}catch(error){setPhoneMessage(errorMessage(error));}
-      return;
-    }
-    const client = createClient();
-    if (!phoneCodeSent) {
-      const { error } = await client.auth.updateUser({ phone: '+91'+phone });
-      setPhoneMessage(error ? error.message : 'Enter the code sent to your phone.');
-      if (!error) setPhoneCodeSent(true);
-    } else {
-      const { error } = await client.auth.verifyOtp({ phone: '+91'+phone, token: phoneCode, type: 'phone_change' });
-      setPhoneMessage(error ? error.message : 'Phone number verified.');
-      if (!error) { setPhoneCodeSent(false); await reload(); }
-    }
   }
   async function saveItem(item: Listing) {
     if (!user) throw new Error('Please sign in again.');
@@ -216,7 +199,7 @@ export default function KgpianDashboard({ accountType = 'kgpians' }: { accountTy
         {tab === 'explore' && <section className="kgp-section"><div className="kgp-heading-row"><div><span className="kgp-eyebrow">DISCOVER RE MARKET</span><h1>Explore<span className="kgp-heading-dot">.</span></h1><p>Find the latest additions from campus stores.</p></div></div>{items.length ? <div className="kgp-listing-grid">{items.map(item => <ListingCard key={item.id} item={item} store={allStores.find(store => store.id === item.storeId)} onOpen={() => { setTab('store'); setWorkspace({storeId:item.storeId,view:'view'}); }}/>)}</div> : <div className="kgp-placeholder kgp-explore-placeholder"><Compass size={36}/><h2>No listings yet.</h2><p>New listings will appear here as stores add them.</p></div>}</section>}
 
         {tab === 'me' && <section className="kgp-section kgp-me" aria-labelledby="me-title"><div className="kgp-heading-row"><div><span className="kgp-eyebrow">A LITTLE ABOUT YOU</span><h1 id="me-title">Me<span className="kgp-heading-dot">.</span></h1><p>Your details and your store, all in one place.</p></div></div><div className="kgp-profile-hero"><div className="kgp-profile-badge">{profile.full_name.charAt(0) || "R"}</div><div><span className="kgp-eyebrow">RE MARKET ACCOUNT</span><h2>Your profile, your space.</h2><p>Your account details and contact information.</p></div><span className="kgp-profile-hero-icon"><UserRound size={28}/></span></div><div className="kgp-settings"><nav className="kgp-settings-tabs" aria-label="Account settings sections"><button type="button" className={section === 'personal' ? 'active' : ''} aria-current={section === 'personal' ? 'page' : undefined} onClick={() => setSection('personal')}><UserRound size={18}/> Personal info <ChevronRight size={16}/></button><button hidden={accountType !== 'kgpians'} type="button" className={section === 'store' ? 'active' : ''} aria-current={section === 'store' ? 'page' : undefined} onClick={openStoreInfo}><Store size={18}/> Store info <ChevronRight size={16}/></button></nav><div className="kgp-settings-panel">
-          {section === 'personal' ? <><div className="kgp-panel-top"><span className="kgp-eyebrow">ACCOUNT SETTINGS</span><h2>Personal info</h2><p>These details come from your verified sign-in account.</p></div><div className="kgp-readonly-grid"><label>Full name<input readOnly value={profile.full_name} aria-label="Full name"/></label><label>Email<input readOnly value={profile.email} aria-label="IIT KGP email"/></label></div><div className="kgp-panel-separator"/><div className="kgp-panel-top"><h3>Contact details</h3><p>Verify a phone number for your account.</p></div><div className="kgp-phone-row"><label htmlFor="kgp-phone">Phone number</label><div><span className="kgp-country-code">+91</span><input id="kgp-phone" type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="10-digit phone number" value={phone} onChange={event => { setPhone(event.target.value.replace(/\D/g, '')); setPhoneMessage(''); setPhoneCodeSent(false); }}/><button type="button" onClick={verifyPhone}><Phone size={15}/> Verify</button></div><small><ShieldCheck size={14}/> Verify your number before adding listings.</small>{phoneCodeSent && <input aria-label="Phone verification code" autoComplete="one-time-code" value={phoneCode} onChange={event => setPhoneCode(event.target.value)}/>}{market.demo.enabled && <p className="kgp-inline-message">Phone testing is enabled for this account. Use PIN 0000.</p>}{market.demo.phoneVerified && <p className="kgp-inline-message">Test phone: {market.demo.phone}</p>}{user?.phone_confirmed_at && <p>Verified phone: +{user.phone}</p>}{phoneMessage && <p role="status" className="kgp-inline-message">{phoneMessage}</p>}</div><div className="kgp-panel-separator"/><div className="kgp-address-field"><label htmlFor="kgp-personal-address">Address</label><p>Where can you be reached on campus?</p><textarea id="kgp-personal-address" rows={3} maxLength={300} placeholder="Hall, room number and campus address" value={address} onChange={event => setAddress(event.target.value)}/><button type="button" className="kgp-primary" onClick={saveAddress}>Save address</button>{savedNotice && <p role="status">{savedNotice}</p>}</div><div className="kgp-panel-separator"/><div className="kgp-personal-note"><BadgeCheck size={22}/><div><strong>Your Re Market account</strong><p>Your name and email are managed by your sign-in provider.</p></div></div></> : <><div className="kgp-panel-top"><span className="kgp-eyebrow">YOUR STORES</span><h2>Store info</h2><p>{isPaidPlan ? 'Choose a store to update its details.' : 'Update the details of your store.'}</p></div>{isPaidPlan && <div className="kgp-store-selector"><span className="kgp-selector-label">SELECT A STORE</span>{stores.map(store => <button type="button" key={store.id} className={`kgp-selector-store ${editingId === store.id ? 'active' : ''}`} onClick={() => beginStore(store)} aria-pressed={editingId === store.id}><span className="kgp-selector-icon"><Store size={18}/></span><span><strong>{store.name}</strong><small>@{store.storeId}</small></span><span className="kgp-selector-action">{editingId === store.id ? 'Editing' : 'Edit'} <ChevronRight size={15}/></span></button>)}</div>}{editingId ? <>{isPaidPlan && <div className="kgp-selected-store-heading"><h3>Edit store details</h3><p>Changes apply to the selected store.</p></div>}{savedNotice && <p role="status" className="kgp-save-notice">{savedNotice}</p>}{storeForm}</> : isPaidPlan ? <p className="kgp-select-hint">Select a store above to edit its details.</p> : null}</>}
+          {section === 'personal' ? <><div className="kgp-panel-top"><span className="kgp-eyebrow">ACCOUNT SETTINGS</span><h2>Personal info</h2><p>These details come from your verified sign-in account.</p></div><div className="kgp-readonly-grid"><label>Full name<input readOnly value={profile.full_name} aria-label="Full name"/></label><label>Email<input readOnly value={profile.email} aria-label="IIT KGP email"/></label></div><div className="kgp-panel-separator"/><div className="kgp-panel-top"><h3>Contact details</h3><p>Verify a phone number for your account.</p></div><PhoneVerification demo={market.demo} verifiedPhone={user?.phone_confirmed_at ? user.phone : undefined} configurationError={market.verificationError} onConfirmed={reload}/><div className="kgp-panel-separator"/><div className="kgp-address-field"><label htmlFor="kgp-personal-address">Address</label><p>Where can you be reached on campus?</p><textarea id="kgp-personal-address" rows={3} maxLength={300} placeholder="Hall, room number and campus address" value={address} onChange={event => setAddress(event.target.value)}/><button type="button" className="kgp-primary" onClick={saveAddress}>Save address</button>{savedNotice && <p role="status">{savedNotice}</p>}</div><div className="kgp-panel-separator"/><div className="kgp-personal-note"><BadgeCheck size={22}/><div><strong>Your Re Market account</strong><p>Your name and email are managed by your sign-in provider.</p></div></div></> : <><div className="kgp-panel-top"><span className="kgp-eyebrow">YOUR STORES</span><h2>Store info</h2><p>{isPaidPlan ? 'Choose a store to update its details.' : 'Update the details of your store.'}</p></div>{isPaidPlan && <div className="kgp-store-selector"><span className="kgp-selector-label">SELECT A STORE</span>{stores.map(store => <button type="button" key={store.id} className={`kgp-selector-store ${editingId === store.id ? 'active' : ''}`} onClick={() => beginStore(store)} aria-pressed={editingId === store.id}><span className="kgp-selector-icon"><Store size={18}/></span><span><strong>{store.name}</strong><small>@{store.storeId}</small></span><span className="kgp-selector-action">{editingId === store.id ? 'Editing' : 'Edit'} <ChevronRight size={15}/></span></button>)}</div>}{editingId ? <>{isPaidPlan && <div className="kgp-selected-store-heading"><h3>Edit store details</h3><p>Changes apply to the selected store.</p></div>}{savedNotice && <p role="status" className="kgp-save-notice">{savedNotice}</p>}{storeForm}</> : isPaidPlan ? <p className="kgp-select-hint">Select a store above to edit its details.</p> : null}</>}
           </div></div></section>}
       </main><button className="kgp-back-link" style={{marginLeft:30}} onClick={() => createClient().auth.signOut()}>Sign out</button><footer className="kgp-footer"><span>Re Market · Built with a little KGP spirit.</span><span>Buy. Sell. Re Market.</span></footer>
     </div>
