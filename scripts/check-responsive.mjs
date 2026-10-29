@@ -42,7 +42,7 @@ try {
   await page.keyboard.press('Escape');
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.tap();
-  await page.locator('.hero-copy > p').tap();
+  await page.locator('.hero-stage').tap();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.tap();
   await page.getByRole('link', { name: 'The marketplace', exact: true }).tap();
