@@ -1,10 +1,29 @@
-﻿node_modules/
+# Dependencies and generated output
+node_modules/
 .next/
 out/
+dist/
+coverage/
 *.tsbuildinfo
+
+# Private configuration; commit only safe templates
 .env*
 !.env.example
+*.pem
+*.key
+
+# Diagnostics, browser reports and local Supabase CLI state
+*.log
 artifacts/
 test-results/
 playwright-report/
+blob-report/
 supabase/.temp/
+supabase/.branches/
+
+# Local archives, hosting state and OS files
+*.tar.gz
+.vercel/
+.netlify/
+.DS_Store
+Thumbs.db

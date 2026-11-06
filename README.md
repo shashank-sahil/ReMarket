@@ -1,32 +1,92 @@
-﻿# Re Market
+# Re Market
 
-A Next.js App Router landing page for an independent IIT Kharagpur student marketplace.
+A marketplace for IIT Kharagpur students, built with Next.js, React and Supabase.
+It includes KGPian/non-KGPian dashboards, store and listing management, image
+uploads, and a store verification Edge Function. Backend features require a
+configured Supabase project and authentication/verification providers.
 
 ## Run locally
 
+Use Node.js 22 (see `.nvmrc`) and npm. Clone this repository, then run these commands
+from the directory containing `package.json`:
+
+```sh
+npm ci
+```
+
+Copy `.env.example` to `.env.local`:
+
 ```powershell
-cd "A:\KGP Market Place -\re-market"
-npm install
+# PowerShell
+Copy-Item .env.example .env.local
+```
+
+```sh
+# macOS / Linux
+cp .env.example .env.local
+```
+
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to your
+project's public API values, then start the app:
+
+```sh
 npm run dev
 ```
 
-Open http://localhost:3000. Edit `app/page.tsx`, `components/marketplace.tsx` and `app/globals.css`. This is now a Next.js application; the original `dist/index.html` prototype is obsolete.
+Open http://localhost:3000. Restart the development server after changing environment
+variables. Public values are embedded at build time; rebuild after changing them
+for deployment. Never put a service-role key or email/SMS secrets in `NEXT_PUBLIC_*`.
 
-## Checks
+## Backend setup
 
-- `npm run build` — production build and TypeScript validation, exports to `out/`.
-- `npm run typecheck` — TypeScript validation.
-- With the development server running: `node scripts/verify.mjs` — desktop/mobile browser and interaction checks. Requires a locally installed Chrome; screenshots go in `artifacts/`.
+Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to create the database and configure
+Google/phone authentication. Apply migrations in timestamp order on a new project.
+For store creation/deletion, configure and deploy the Edge Function using
+[STORE_VERIFICATION_SETUP.md](STORE_VERIFICATION_SETUP.md) **before applying migration
+003**, which removes direct store insert/delete access.
 
-## What works
+Copy `supabase/functions/.env.example` to `supabase/functions/.env` and populate
+provider secrets locally. This is separate from the frontend `.env.local`.
+Use your own Supabase project reference wherever the setup guides show the original
+project reference, and configure your production redirect URL and
+`STORE_ACTION_ALLOWED_ORIGINS`.
 
-Category filters, text search, saved finds, a mobile menu, an accessible sign-in dialog and FAQs, and reduced-motion support. Saved items persist in localStorage when available.
+The example disables demo access. Real store verification needs Resend and Twilio;
+restricted demo access is described in the verification guide. Payment checkout
+is not implemented. Authentication and marketplace data require backend setup.
 
-The product cards are illustrative offers. The Buy & sell buttons open a sign-in/sign-up UI preview with KGPian and non-KGPian paths. Google sign-in and phone verification are placeholders; no authentication or messages are sent. Accounts, chat, payments, image uploads and shared listings are outside this landing-page build.
+## Checks and production preview
 
-## Design
+```sh
+npm run typecheck
+npm test
+npm run build
+npm start
+```
 
-Apple-inspired silver and white surfaces, restrained blue accents, sage details, expressive typography, a custom generated product still life, pointer-responsive CSS 3D perspective and Motion animations. Fonts and imagery are served locally. See ASSETS.md for image provenance and generation prompt.
+`npm test` runs the existing Edge Function tests with simulated database/provider
+responses and needs no real credentials. `npm run build` creates a static export
+in `out/`. `npm start` and `npm run preview:local` serve that export on localhost:3000;
+the preview also reserves ports 3101/3102 for legacy redirects. Deploy the contents
+of `out/` to static hosting after building with the correct public configuration.
 
-Responsive styles are in app/responsive.css. Run node scripts/check-responsive.mjs against the local dev server to check 10 viewport sizes, touch target sizes, the sign-in flow and navigation behaviour.
+The optional scripts in `scripts/` and `tests/supabase-ui.spec.ts` are browser
+checks. Several assume Windows Chrome and the original Supabase project; adapt
+those settings before running them on another machine. They are separate from
+`npm test`.
 
+## Contributing and Git
+
+Create a branch, make your changes, run the checks above, and open a pull request.
+Commit `package.json` and `package-lock.json` together when changing dependencies;
+use `npm ci` for reproducible installs.
+
+The ignore rules exclude secrets, dependencies, generated exports, logs, browser
+reports and local snapshots. Commit the `.env.example` templates so collaborators
+know which variables to provide. Keep private values in local environment files
+or deployment secret settings. Review `git diff --cached` before pushing. If this
+folder is inside the original archive workspace, push from this folder: its parent
+is a separate Git repository.
+
+See [ASSETS.md](ASSETS.md) for image provenance. `.openai/hosting.json` describes
+the existing Sites hosting project; it is not required to run locally.

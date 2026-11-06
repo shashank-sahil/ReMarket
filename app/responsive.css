@@ -258,3 +258,13 @@
 
 .product-card:hover .product-image-button img { transform: none; }
 footer:focus { outline: none; }
+.empty-state > .explore-sign-in,
+.empty-state > .explore-sign-in:hover,
+.empty-state > .explore-sign-in:focus-visible {
+  background: #0066cc;
+  color: #fff;
+}
+
+.empty-state > .explore-sign-in svg {
+  color: inherit;
+}
